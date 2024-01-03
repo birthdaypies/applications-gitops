@@ -1,7 +1,7 @@
 applications:
 - name: pols-place
-  project: birthdays
-  targetNamespace: birthdays
+  project: birthdaypies
+  targetNamespace: birthdaypies
   remoteRefKey: silvester-io_github_private-ssh-key
   github:
     organization: birthdaypies
