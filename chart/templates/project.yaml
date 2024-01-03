@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: birthdays
+  namespace: argocd
+  # Finalizer that ensures that project is not deleted until it is not referenced by any application
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Project for the birthday applications.
+  # Allow manifests to deploy from any Git repos inside the birthdays organization on github.
+  sourceRepos:
+  - "*"
+  - 'https://europe-west1-docker.pkg.dev/silvester-306016/the-farmer-docker/helm-charts'
+  {{- range .Values.applications }}
+  - 'ssh://git@github.com:22/{{ .github.organization }}/{{ .github.repository }}.git'
+  {{- end }}
+  # Only permit applications to deploy to the birthdays namespace in the same cluster
+  destinations:
+  - namespace: birthdays
+    server: https://kubernetes.default.svc
+  - namespace: argocd
+    server: https://kubernetes.default.svc
+  # Deny all cluster-scoped resources from being created, except for Namespace
+  clusterResourceWhitelist:
+  - group: ''
+    kind: Namespace
+  # Allow all namespaced-scoped resources to be created, except for ResourceQuota, LimitRange, NetworkPolicy
+  namespaceResourceBlacklist:
+  - group: ''
+    kind: ResourceQuota
+  - group: ''
+    kind: LimitRange
+  - group: ''
+    kind: NetworkPolicy
+  roles:
+  # A role which provides read-only access to all applications in the project
+  - name: read-only
+    description: Read-only privileges to the birthdays project.
+    policies:
+    - p, proj:birthdays:read-only, applications, get, birthdays/*, allow
